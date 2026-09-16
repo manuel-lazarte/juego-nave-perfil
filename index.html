@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nave Espacial Perfil</title>
+    <style>
+        body { margin: 0; background: #0d1117; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; color: white; font-family: sans-serif; }
+        canvas { border: 2px solid #30363d; background: #161b22; borderRadius: 6px; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const player = { x: 180, y: 350, w: 30, h: 30, speed: 6 };
+    let bullets = [], enemies = [], score = 0, keys = {};
+
+    window.addEventListener("keydown", e => keys[e.code] = true);
+    window.addEventListener("keyup", e => keys[e.code] = false);
+
+    setInterval(() => {
+        enemies.push({ x: Math.random() * (canvas.width - 20), y: 0, w: 20, h: 20, speed: 2 });
+    }, 1200);
+
+    function update() {
+        if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
+        if (keys["ArrowRight"] && player.x < canvas.width - player.w) player.x += player.speed;
+        if (keys["Space"]) {
+            bullets.push({ x: player.x + player.w / 2 - 2, y: player.y, w: 4, h: 10, speed: 8 });
+            keys["Space"] = false;
+        }
+        bullets.forEach((b, i) => { b.y -= b.speed; if (b.y < 0) bullets.splice(i, 1); });
+        enemies.forEach((e, i) => { e.y += e.speed; if (e.y > canvas.height) enemies.splice(i, 1); });
+        bullets.forEach((b, bi) => {
+            enemies.forEach((e, ei) => {
+                if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+                    enemies.splice(ei, 1); bullets.splice(bi, 1); score += 10;
+                }
+            });
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#238636"; // Verde estilo GitHub para la nave
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        ctx.fillStyle = "#58a6ff"; // Balas azules
+        bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+        ctx.fillStyle = "#da3633"; // Enemigos rojos
+        enemies.forEach(e => ctx.fillRect(e.x, e.y, e.w, e.h));
+        ctx.fillStyle = "#c9d1d9";
+        ctx.font = "16px Arial";
+        ctx.fillText(`Puntos: ${score}`, 10, 25);
+    }
+
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    loop();
+</script>
+</body>
+</html>
